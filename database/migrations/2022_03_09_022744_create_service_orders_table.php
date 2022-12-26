@@ -31,9 +31,6 @@ class CreateServiceOrdersTable extends Migration
             $table->id();
             $table->foreignId("service_order_id")->constrained('service_orders');
             $table->foreignId("flight_plan_id")->constrained('flight_plans');
-            $table->foreignId('drone_id')->nullable(true)->constrained('drones');
-            $table->foreignId('battery_id')->nullable(true)->constrained('batteries');
-            $table->foreignId('equipment_id')->nullable(true)->constrained('equipments');
         });
 
         // Relationship with users

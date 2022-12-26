@@ -15,6 +15,7 @@ class CreateEquipmentsTable extends Migration
     {
         Schema::create('equipments', function (Blueprint $table) {
             $table->id();
+            $table->foreignId("service_order_flight_plan_id")->nullable(true)->constrained('service_order_flight_plan');
             $table->string('name');
             $table->string('manufacturer');
             $table->string('model');
