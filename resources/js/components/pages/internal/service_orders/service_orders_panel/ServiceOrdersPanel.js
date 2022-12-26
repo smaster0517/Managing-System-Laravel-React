@@ -1,9 +1,9 @@
-// React
 import * as React from 'react';
 // MaterialUI
 import { Tooltip, IconButton, Grid, TextField, InputAdornment, Box, Chip } from "@mui/material";
 import { useSnackbar } from 'notistack';
 import { DataGrid, ptBR } from '@mui/x-data-grid';
+import InfoIcon from '@mui/icons-material/Info';
 // Fontsawesome
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileCsv } from '@fortawesome/free-solid-svg-icons';
@@ -23,18 +23,31 @@ import { ExportTableData } from '../../../../shared/modals/dialog/ExportTableDat
 import { TableToolbar } from '../../../../shared/table_toolbar/TableToolbar';
 import { useAuthentication } from "../../../../context/InternalRoutesAuth/AuthenticationContext";
 import axios from "../../../../../services/AxiosApi";
+import { CircularStaticWithLabel } from '../../../../shared/progress/CircularStaticWithLabel';
+import { WhiteTooltip } from '../../../../shared/tooltip/WhiteTooltip';
+// Moment
+import moment from 'moment';
 
 const columns = [
   { field: 'id', headerName: 'ID', width: 90 },
   {
     field: 'status',
     headerName: 'Status',
-    width: 100,
+    width: 150,
     sortable: true,
     editable: false,
     renderCell: (data) => {
-      const status = data.row.status;
-      return <Chip label={status ? "Ativo" : "Inativo"} color={status ? "success" : "error"} variant="outlined" />
+
+      function chipStyle(status) {
+        return status ? { label: "Ativo", color: "success", variant: "outlined" } : { label: "Inativo", color: "error", variant: "outlined" };
+      }
+
+      const chip_style = chipStyle(data.row.status);
+
+      return (
+        <Chip {...chip_style} />
+      )
+
     }
   },
   {
@@ -48,13 +61,28 @@ const columns = [
     field: 'creator',
     headerName: 'Criador',
     type: 'number',
-    width: 150,
+    flex: 1,
+    minWidth: 200,
     headerAlign: 'left',
     sortable: true,
     editable: false,
     renderCell: (data) => {
-      const status = data.row.users.creator.status;
-      return <Chip label={data.row.users.creator.name} color={status ? "success" : "error"} variant="outlined" />
+
+      function chipStyle(is_deleted, status) {
+        const label = data.row.users.creator.name;
+        if (is_deleted === 1) {
+          return { label: label, color: "error", variant: "contained" };
+        } else if (is_deleted === 0) {
+          return status ? { label: label, color: "success", variant: "outlined" } : { label: label, color: "error", variant: "outlined" }
+        }
+      }
+
+      const chip_style = chipStyle(data.row.users.creator.deleted, data.row.users.creator.status);
+
+      return (
+        <Chip {...chip_style} />
+      )
+
     }
   },
   {
@@ -63,9 +91,20 @@ const columns = [
     sortable: true,
     editable: false,
     flex: 1,
+    minWidth: 200,
     renderCell: (data) => {
-      const status = data.row.users.pilot.status;
-      return <Chip label={data.row.users.pilot.name} color={status ? "success" : "error"} variant="outlined" />
+
+      function chipStyle(status) {
+        const label = data.row.users.pilot.name;
+        return status ? { label: label, color: "success", variant: "outlined" } : { label: label, color: "error", variant: "outlined" };
+      }
+
+      const chip_style = chipStyle(data.row.users.pilot.status);
+
+      return (
+        <Chip {...chip_style} />
+      )
+
     }
   },
   {
@@ -74,17 +113,76 @@ const columns = [
     sortable: true,
     editable: false,
     flex: 1,
+    minWidth: 200,
     renderCell: (data) => {
-      const status = data.row.users.client.status;
-      return <Chip label={data.row.users.client.name} color={status ? "success" : "error"} variant="outlined" />
+
+      function chipStyle(status) {
+        const label = data.row.users.client.name;
+        return status ? { label: label, color: "success", variant: "outlined" } : { label: label, color: "error", variant: "outlined" };
+      }
+
+      const chip_style = chipStyle(data.row.users.client.status);
+
+      return (
+        <Chip {...chip_style} />
+      )
+
     }
   },
   {
-    field: 'observation',
-    headerName: 'Descrição',
+    field: 'progress',
+    headerName: 'Progresso',
     sortable: true,
     editable: false,
-    width: 150
+    minWidth: 150,
+    renderCell: (data) => {
+
+      if (data.row.finished) {
+        return <Chip label="Finalizado" color="success" variant="outlined" />;
+      }
+
+      const start_date = moment(data.row.start_date).format("DD/MM/YYYY");
+      const final_date = moment(data.row.end_date).format("DD/MM/YYYY");
+      const total_days = moment(data.row.end_date).diff(moment(data.row.start_date), 'days');
+
+      // > 0 = started and < 0 = to start
+      const days_from_start = moment().diff(moment(data.row.start_date), 'days');
+
+      // > 0 = ended and < 0 = to end
+      const days_from_end = moment().diff(moment(data.row.end_date), 'days');
+
+      let progress_percentage = 0;
+      let progress_days = 0;
+
+      if ((days_from_start > 0 || days_from_start === 0) && days_from_end < 0) { // In progress
+        progress_percentage = 100 * days_from_start / total_days;
+        progress_days = days_from_start;
+      } else if (days_from_start < 0) { // To start
+        progress_percentage = 0;
+      } else if (days_from_end > 0) { // Ended
+        progress_percentage = 100;
+        progress_days = total_days;
+      }
+
+      const title = `
+      Início: ${start_date}
+      Fim: ${final_date}
+      Total (dias): ${total_days}
+      Progresso (dias): ${progress_days}
+      `;
+
+      return (
+        <>
+          <CircularStaticWithLabel value={progress_percentage} />
+          <WhiteTooltip title={title}>
+            <IconButton sx={{ ml: 1 }}>
+              <InfoIcon sx={{ color: "#007937" }} />
+            </IconButton>
+          </WhiteTooltip>
+        </>
+      )
+
+    }
   },
   {
     field: 'flight_plans',
@@ -92,6 +190,7 @@ const columns = [
     sortable: true,
     editable: false,
     width: 150,
+    align: 'center',
     valueGetter: (data) => {
       return data.row.flight_plans.length;
     }
@@ -101,33 +200,34 @@ const columns = [
     headerName: 'Incidentes',
     sortable: true,
     editable: false,
-    width: 100,
+    width: 150,
+    align: 'center'
   },
   {
     field: 'report',
     headerName: 'Relatório',
     sortable: true,
     editable: false,
-    width: 100,
+    width: 150,
+    align: 'center',
     renderCell: (data) => {
-      if (data.row.finished) {
-        return (
-          <IconButton>
-            <FontAwesomeIcon icon={faFilePdf} color={"#007937"} size="sm" />
-          </IconButton>
-        )
-      } else {
-        return (
-          <IconButton>
-            <FontAwesomeIcon icon={faFilePdf} color={"#E0E0E0"} size="sm" />
-          </IconButton>
-        )
+
+      function iconStyle(is_finished) {
+        return is_finished ? { icon: faFilePdf, color: "#007937", size: "sm" } : { icon: faFilePdf, color: "#E0E0E0", size: "sm" }
       }
+
+      const icon_style = iconStyle(data.row.finished);
+
+      return (
+        <IconButton>
+          <FontAwesomeIcon {...icon_style} />
+        </IconButton>
+      )
     }
   },
 ];
 
-export const ServiceOrdersPanel = () => {
+export function ServiceOrdersPanel() {
 
   // ============================================================================== STATES ============================================================================== //
 
@@ -281,7 +381,7 @@ export const ServiceOrdersPanel = () => {
           </Tooltip>
         </Grid>
 
-        <Grid item xs>
+        <Grid item xs={12}>
           <TextField
             fullWidth
             placeholder={"Pesquisar ordem por ID, número ou nome dos usuários envolvidos"}

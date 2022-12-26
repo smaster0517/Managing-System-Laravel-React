@@ -1,16 +1,14 @@
 import * as React from 'react';
 // Material UI
-import { Button, TextField, Grid, Box, Container, Typography } from '@mui/material';
+import { Button, TextField, Grid, Container, Typography, Avatar } from '@mui/material';
 import { makeStyles } from "@mui/styles";
 import LoadingButton from '@mui/lab/LoadingButton';
 import SaveIcon from '@mui/icons-material/Save';
 import { useSnackbar } from 'notistack';
+import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
 // Custom
 import { FormValidation } from '../../../../utils/FormValidation';
 import axios from '../../../../services/AxiosApi';
-// Fonts awesome
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsersGear } from '@fortawesome/free-solid-svg-icons';
 // Raect Router
 import { Link } from 'react-router-dom';
 
@@ -21,33 +19,36 @@ const useStyles = makeStyles((theme) => ({
     hiperlink: {
         color: theme.palette.mode == 'light' ? "#222" : "#fff",
     }
-}))
+}));
+
+const initialControlledInput = { email: "", code: "", new_password: "", new_password_confirmation: "" };
+const initialFieldError = { email: false, code: false, new_password: false, new_password_confirmation: false };
+const initialFieldErrorMessage = { email: "", code: "", new_password: "", new_password_confirmation: "" };
 
 export const ForgotPassword = () => {
 
     // ============================================================================== VARIABLES ============================================================================== //
 
-    const [controlledInput, setControlledInput] = React.useState({ email: "", code: "", new_password: "", new_password_confirmation: "" });
-    const [fieldError, setFieldError] = React.useState({ email: false, code: false, new_password: false, new_password_confirmation: false });
-    const [fieldErrorMessage, setFiedlErrorMessage] = React.useState({ email: "", code: "", new_password: "", new_password_confirmation: "" });
+    const [controlledInput, setControlledInput] = React.useState(initialControlledInput);
+    const [fieldError, setFieldError] = React.useState(initialFieldError);
+    const [fieldErrorMessage, setFiedlErrorMessage] = React.useState(initialFieldErrorMessage);
     const [codeSent, setCodeSent] = React.useState(false);
     const [timer, setTimer] = React.useState(0);
     const [loading, setLoading] = React.useState({ send_code: false, change_password: false });
     const classes = useStyles();
+
     const { enqueueSnackbar } = useSnackbar();
 
     // ============================================================================== ROUTINES ============================================================================== //
 
-    function handleCodeSubmit(e) {
-        e.preventDefault();
+    function handleCodeSubmit() {
         if (formSendCodeValidation()) {
             setLoading({ send_code: true, change_password: false });
             sendCodeServerRequest();
         }
     }
 
-    function handleChangePasswordSubmit(e) {
-        e.preventDefault();
+    function handleChangePasswordSubmit() {
         if (formChangePasswordValidation()) {
             setLoading({ send_code: false, change_password: true });
             changePasswordServerRequest();
@@ -107,7 +108,7 @@ export const ForgotPassword = () => {
     }
 
     function successSendCodeResponse() {
-        setTimer(10);
+        setTimer(30);
         setCodeSent(true);
         setLoading({ send_code: false, change_password: false });
     }
@@ -146,13 +147,16 @@ export const ForgotPassword = () => {
     }
 
     React.useEffect(() => {
+
         if (timer === 0) {
             return ''
         }
+
         setTimeout(() => {
             setTimer((previously) => previously - 1);
         }, 1000);
-    }, [timer])
+
+    }, [timer]);
 
     function handleOpenSnackbar(text, variant) {
         enqueueSnackbar(text, { variant });
@@ -163,24 +167,22 @@ export const ForgotPassword = () => {
     return (
         <>
             <Container component="main" maxWidth="xs">
-                <Box
-                    sx={{
-                        marginTop: 8,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                    }}
-                >
-                    <Box sx={{ mb: 1 }}>
-                        <FontAwesomeIcon icon={faUsersGear} color={'#00713A'} size={"2x"} />
-                    </Box>
 
-                    <Typography component="h1" variant="h5">
-                        Recuperar a conta
-                    </Typography>
+                <Grid container columns={12} spacing={1} sx={{ mt: 8 }}>
 
-                    <Box component="form" onSubmit={handleCodeSubmit} noValidate sx={{ mt: 2 }}>
+                    <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Avatar sx={{ m: 1, bgcolor: 'success.main' }}>
+                            <ChangeCircleIcon />
+                        </Avatar>
+                    </Grid>
 
+                    <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Typography component="h1" variant="h5">
+                            Recuperar a conta
+                        </Typography>
+                    </Grid>
+
+                    <Grid item xs={12}>
                         <TextField
                             margin="normal"
                             required
@@ -193,14 +195,17 @@ export const ForgotPassword = () => {
                             error={fieldError.email}
                             helperText={fieldErrorMessage.email}
                         />
+                    </Grid>
 
+                    <Grid item xs={12}>
                         {!loading.send_code &&
                             <Button
                                 type="submit"
                                 fullWidth
                                 variant="contained"
-                                sx={{ mt: 1, mb: 2, borderRadius: 5 }}
+                                sx={{ borderRadius: 1 }}
                                 disabled={timer > 0}
+                                onClick={handleCodeSubmit}
                             >
                                 {timer === 0 ? "Enviar código" : timer}
                             </Button>
@@ -214,14 +219,17 @@ export const ForgotPassword = () => {
                                 variant="outlined"
                                 type="submit"
                                 fullWidth
-                                sx={{ mt: 1, mb: 2, borderRadius: 5 }}
+                                sx={{ borderRadius: 1 }}
                             >
                                 Enviando código
                             </LoadingButton>
                         }
-                    </Box>
-                    
-                    <Box component="form" onSubmit={handleChangePasswordSubmit} noValidate sx={{ mt: 1 }}>
+                    </Grid>
+                </Grid>
+
+                <Grid container columns={12}>
+
+                    <Grid item xs={12}>
                         <TextField
                             margin="normal"
                             required
@@ -234,6 +242,9 @@ export const ForgotPassword = () => {
                             error={fieldError.code}
                             helperText={fieldErrorMessage.code}
                         />
+                    </Grid>
+
+                    <Grid item xs={12}>
                         <TextField
                             margin="normal"
                             required
@@ -247,6 +258,9 @@ export const ForgotPassword = () => {
                             helperText={fieldErrorMessage.new_password}
                             error={fieldError.new_password}
                         />
+                    </Grid>
+
+                    <Grid item xs={12}>
                         <TextField
                             margin="normal"
                             required
@@ -259,15 +273,19 @@ export const ForgotPassword = () => {
                             disabled={!codeSent}
                             helperText={fieldErrorMessage.new_password_confirmation}
                             error={fieldError.new_password_confirmation}
+                            sx={{ mb: 3 }}
                         />
+                    </Grid>
 
+                    <Grid item xs={12}>
                         {!loading.change_password &&
                             <Button
                                 type="submit"
                                 fullWidth
                                 variant="contained"
-                                sx={{ mt: 1, mb: 2, borderRadius: 5 }}
+                                sx={{ borderRadius: 1 }}
                                 disabled={!codeSent}
+                                onClick={handleChangePasswordSubmit}
                             >
                                 Alterar a senha
                             </Button>
@@ -281,21 +299,23 @@ export const ForgotPassword = () => {
                                 variant="outlined"
                                 type="submit"
                                 fullWidth
-                                sx={{ mt: 1, mb: 2, borderRadius: 5 }}
+                                sx={{ borderRadius: 1 }}
                             >
                                 Alterando senha
                             </LoadingButton>
                         }
+                    </Grid>
 
-                        <Grid container justifyContent="flex-end">
-                            <Grid item>
-                                <Link to="/login" className={classes.hiperlink}>
-                                    Voltar para a página de acesso
-                                </Link>
-                            </Grid>
-                        </Grid>
-                    </Box>
-                </Box>
+                    <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'end', mt: 1 }}>
+                        <Link to="/login" className={classes.hiperlink}>
+                            Voltar para a página de acesso
+                        </Link>
+                    </Grid>
+                </Grid>
+
+
+
+
             </Container>
         </>
     )

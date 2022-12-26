@@ -48,7 +48,7 @@ class Profile extends Model
     */
     function users()
     {
-        return $this->hasMany(User::class, "profile_id");
+        return $this->hasMany(User::class, "profile_id")->withTrashed();
     }
 
     /*
@@ -58,4 +58,14 @@ class Profile extends Model
     {
         return $this->belongsToMany(Module::class, "profile_module")->withPivot('read', 'write');
     }
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'created_at' => 'date:Y-m-d',
+        'updated_at' => 'date:Y-m-d'
+    ];
 }

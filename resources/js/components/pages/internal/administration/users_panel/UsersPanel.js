@@ -3,15 +3,6 @@ import * as React from 'react';
 import { Tooltip, IconButton, Grid, TextField, Chip, InputAdornment, Box } from "@mui/material";
 import { useSnackbar } from 'notistack';
 import { DataGrid, ptBR } from '@mui/x-data-grid';
-// Custom
-import { useAuthentication } from "../../../../context/InternalRoutesAuth/AuthenticationContext";
-import axios from "../../../../../services/AxiosApi";
-import { CreateUser } from './formulary/CreateUser';
-import { UpdateUser } from './formulary/UpdateUser';
-import { DeleteUser } from './formulary/DeleteUser';
-import { UserInformation } from './formulary/UserInformation';
-import { ExportTableData } from '../../../../shared/modals/dialog/ExportTableData';
-import { TableToolbar } from '../../../../shared/table_toolbar/TableToolbar';
 // Fonts Awesome
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileCsv } from '@fortawesome/free-solid-svg-icons';
@@ -21,6 +12,17 @@ import { faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { faPen } from '@fortawesome/free-solid-svg-icons';
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
+// Custom
+import { useAuthentication } from "../../../../context/InternalRoutesAuth/AuthenticationContext";
+import axios from "../../../../../services/AxiosApi";
+import { CreateUser } from './formulary/CreateUser';
+import { UpdateUser } from './formulary/UpdateUser';
+import { DeleteUser } from './formulary/DeleteUser';
+import { UserInformation } from './formulary/UserInformation';
+import { ExportTableData } from '../../../../shared/modals/dialog/ExportTableData';
+import { TableToolbar } from '../../../../shared/table_toolbar/TableToolbar';
+// Moment
+import moment from 'moment';
 
 const columns = [
   { field: 'id', headerName: 'ID', width: 90 },
@@ -28,6 +30,7 @@ const columns = [
     field: 'name',
     headerName: 'Nome',
     flex: 1,
+    minWidth: 200,
     sortable: true,
     editable: false,
   },
@@ -35,6 +38,7 @@ const columns = [
     field: 'email',
     headerName: 'Email',
     flex: 1,
+    minWidth: 200,
     sortable: true,
     editable: false,
   },
@@ -43,16 +47,21 @@ const columns = [
     headerName: 'Status',
     type: 'number',
     width: 150,
+    align: 'center',
     headerAlign: 'left',
     sortable: true,
     editable: false,
     renderCell: (data) => {
-      const status = data.row.status;
-      if (status === 1) {
-        return <Chip label="Ativo" color="success" variant="outlined" />
-      } else {
-        return <Chip label="Inativo" color="error" variant="outlined" />
+
+      function chipStyle(status) {
+        return status === 1 ? { label: "Ativo", color: "success", variant: "outlined" } : { label: "Inativo", color: "error", variant: "outlined" };
       }
+
+      const chip_style = chipStyle(data.row.status);
+
+      return (
+        <Chip {...chip_style} />
+      )
     }
   },
   {
@@ -60,7 +69,7 @@ const columns = [
     headerName: 'Perfil',
     sortable: true,
     editable: false,
-    flex: 1,
+    width: 180,
     valueGetter: (data) => {
       return data.row.profile.name;
     },
@@ -71,6 +80,9 @@ const columns = [
     sortable: true,
     editable: false,
     width: 150,
+    valueGetter: (data) => {
+      return data.row.last_access != "nunca" ? moment(data.row.last_access).format("DD/MM/YYYY") : data.row.last_access
+    }
   },
 ];
 
@@ -227,10 +239,10 @@ export function UsersPanel() {
           </Tooltip>
         </Grid>
 
-        <Grid item xs>
+        <Grid item xs={12}>
           <TextField
             fullWidth
-            placeholder={"Pesquisar um usuário por ID, nome, email e perfil"}
+            placeholder={"Pesquisar um usuário por ID, nome, email ou perfil"}
             onChange={(e) => setSearch(e.currentTarget.value)}
             onKeyDown={(e) => { if (e.key === "Enter") setReload((old) => !old) }}
             InputProps={{
@@ -246,6 +258,7 @@ export function UsersPanel() {
             variant="outlined"
           />
         </Grid>
+
       </Grid>
 
       <Box

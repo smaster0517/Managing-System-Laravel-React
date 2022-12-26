@@ -81,7 +81,7 @@ class User extends Authenticatable
     */
     function service_orders()
     {
-        return $this->belongsToMany(ServiceOrder::class, "service_order_user", "user_id")->withPivot("role");
+        return $this->belongsToMany(ServiceOrder::class, "service_order_user", "user_id")->withPivot("role")->withTrashed();
     }
 
     /*
@@ -147,4 +147,15 @@ class User extends Authenticatable
     {
         return explode(" ", $this->name)[0];
     }
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'created_at' => 'date:Y-m-d',
+        'updated_at' => 'date:Y-m-d',
+        'last_access' => 'date:Y-m-d'
+    ];
 }

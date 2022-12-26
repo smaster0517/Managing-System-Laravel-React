@@ -1,4 +1,3 @@
-// React
 import * as React from 'react';
 // Material UI
 import { Link, Tooltip, IconButton, Grid, TextField, InputAdornment, Box } from "@mui/material";
@@ -13,7 +12,8 @@ import { faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { faPen } from '@fortawesome/free-solid-svg-icons';
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
-import { faFile } from '@fortawesome/free-solid-svg-icons';
+import { faMap } from '@fortawesome/free-solid-svg-icons';
+import { faFileLines } from '@fortawesome/free-solid-svg-icons';
 // Custom
 import { UpdateFlightPlan } from './formulary/UpdateFlightPlan';
 import { DeleteFlightPlan } from './formulary/DeleteFlightPlan';
@@ -23,6 +23,8 @@ import { useAuthentication } from "../../../../context/InternalRoutesAuth/Authen
 import { ExportTableData } from '../../../../shared/modals/dialog/ExportTableData';
 import { TableToolbar } from '../../../../shared/table_toolbar/TableToolbar';
 import axios from "../../../../../services/AxiosApi";
+// Moment
+import moment from 'moment';
 
 const columns = [
   { field: 'id', headerName: 'ID', width: 90 },
@@ -60,18 +62,23 @@ const columns = [
     headerName: 'Criado em',
     type: 'number',
     headerAlign: 'left',
+    align: 'center',
     sortable: true,
     editable: false,
-    width: 130
+    width: 130,
+    valueGetter: (data) => {
+      return moment(data.row.created_at).format("DD/MM/YYYY")
+    }
   },
   {
     field: 'service_orders',
     headerName: 'Ordens de serviço',
     width: 160,
+    align: 'center',
     sortable: true,
     editable: false,
-    renderCell: (data) => {
-      return data.row.service_orders.length;
+    valueGetter: (data) => {
+      return data.row.service_orders.data.length;
     }
   },
   {
@@ -80,7 +87,8 @@ const columns = [
     sortable: true,
     editable: false,
     width: 120,
-    renderCell: (data) => {
+    align: 'center',
+    valueGetter: (data) => {
       return data.row.logs.length;
     }
   },
@@ -90,16 +98,34 @@ const columns = [
     sortable: true,
     editable: false,
     width: 150,
-    renderCell: (data) => {
+    align: 'center',
+    valueGetter: (data) => {
       return data.row.total_incidents;
     }
   },
   {
-    field: 'export',
-    headerName: 'Exportar',
+    field: 'open',
+    headerName: 'Abrir',
+    width: 150,
+    sortable: false,
+    align: 'center',
+    renderCell: (data) => {
+      return (
+        <IconButton>
+          <Link href={`/internal/map?file=${data.row.file}`} target="_blank">
+            <FontAwesomeIcon icon={faMap} color={"#00713A"} size="sm" />
+          </Link>
+        </IconButton>
+      )
+    }
+  },
+  {
+    field: 'export_txt',
+    headerName: 'Exportar TXT',
     sortable: false,
     editable: false,
     width: 150,
+    align: 'center',
     renderCell: (data) => {
 
       const { enqueueSnackbar } = useSnackbar();
@@ -127,7 +153,73 @@ const columns = [
 
       return (
         <IconButton onClick={() => handleDownloadFlightPlan(data.row.file)}>
-          <FontAwesomeIcon icon={faFile} color={"#00713A"} size="sm" />
+          <FontAwesomeIcon icon={faFileLines} color={"#00713A"} size="sm" />
+        </IconButton>
+      )
+    }
+  },
+  {
+    field: 'export_csv',
+    headerName: 'Exportar CSV',
+    sortable: false,
+    editable: false,
+    width: 150,
+    align: 'center',
+    renderCell: (data) => {
+
+      const { enqueueSnackbar } = useSnackbar();
+
+      function handleDownloadFlightPlanAsCSV(filename) {
+        axios.get(`/api/plans-module-download/${filename}`, null, {
+          responseType: 'blob'
+        })
+          .then(function (response) {
+            enqueueSnackbar(`Download realizado com sucesso! Arquivo: ${filename}`, { variant: "success" });
+
+            // ========= Routine that already exists in the map algorithm ========= //
+            let content = "latitude;longitude;altitude(m)\n";
+
+            // Create array from file lines
+            var lines = response.data.split("\n");
+
+            // Breaking lines where exists spaces (\t)
+            for (let i = 4; i < lines.length - 2; i++) {
+              let line = lines[i].split("\t");
+
+              // Only waypoints with latitude and longitude are considered - code 16
+              // Code 183 waypoints (dispenser trigger) have lat/long reset and cannot be added to route drawing
+              if (Number(line[3]) == 16) {
+
+                // Latitude, longitude, and altitude positions are at indices 8, 9, and 10 of each row
+                content += line[8] + ";" + line[9] + ";" + line[10] + "\n";
+              }
+            }
+            
+            //console.log(content);
+
+            let blob = new Blob([content],
+              { type: "text/plain;charset=utf-8" });
+
+            // Nome do arquivo com data em milissegundos decorridos
+            let filename = new Date().getTime() + ".csv";
+
+            // Download forçado
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `${filename}`); //or any other extension
+            document.body.appendChild(link);
+            link.click();
+
+          })
+          .catch(() => {
+            enqueueSnackbar(`O download não foi realizado! Arquivo: ${filename}`, { variant: "error" });
+          })
+      }
+
+      return (
+        <IconButton onClick={() => handleDownloadFlightPlanAsCSV(data.row.file)}>
+          <FontAwesomeIcon icon={faFileCsv} color={"#00713A"} size="sm" />
         </IconButton>
       )
     }
@@ -295,7 +387,7 @@ export function FlightPlansPanel() {
           </Tooltip>
         </Grid>
 
-        <Grid item xs>
+        <Grid item xs={12}>
           <TextField
             fullWidth
             placeholder={"Pesquisar plano por id e nome"}

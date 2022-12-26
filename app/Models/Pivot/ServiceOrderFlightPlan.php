@@ -18,21 +18,21 @@ class ServiceOrderFlightPlan extends Model
 
     function flight_plan()
     {
-        return $this->belongsTo(FlightPlan::class, "flight_plan_id", "id");
+        return $this->belongsTo(FlightPlan::class, "flight_plan_id", "id")->withTrashed();
     }
 
     function service_order()
     {
-        return $this->belongsTo(ServiceOrder::class, "service_order_id", "id");
+        return $this->belongsTo(ServiceOrder::class, "service_order_id", "id")->withTrashed();
     }
 
     function incidents()
     {
-        return $this->hasMany(Incident::class, "service_order_flight_plan_id");
+        return $this->hasMany(Incident::class, "service_order_flight_plan_id")->withTrashed();
     }
 
     function logs()
     {
-        return $this->hasMany(Log::class, "service_order_flight_plan_id");
+        return $this->hasMany(Log::class, "service_order_flight_plan_id")->withTrashed();
     }
 }

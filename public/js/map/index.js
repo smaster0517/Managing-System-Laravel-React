@@ -32,15 +32,15 @@ marcador = new mapboxgl.Marker({ color: 'black' })
 // ========= FERRAMENTA DE BUSCA POR LOCALIDADES =========== //
 
 // Adicionando o controle de busca ao mapa.
-map.addControl(
-    new MapboxGeocoder({
-        accessToken: mapboxgl.accessToken,
-        mapboxgl: mapboxgl
-    })
-);
+var mapBoxGeocoder = new MapboxGeocoder({
+    accessToken: mapboxgl.accessToken,
+    mapboxgl: mapboxgl
+});
+map.addControl(mapBoxGeocoder);
 
+var mapBoxNavigationControl = new mapboxgl.NavigationControl();
 // Adicionando controles de zoom e rotação no mapa
-map.addControl(new mapboxgl.NavigationControl());
+map.addControl(mapBoxNavigationControl);
 
 // ========== DESENHANDO POLÍGONO ============= //
 
@@ -1102,6 +1102,9 @@ function recomputeDistanceBetweenLines() {
 // Acessando o botão de menu
 var btnMenu = document.getElementById("btn-mission");
 
+// Acessando o menu lateral do marcador
+var markerSideMenu = document.getElementById('side_menu');
+
 // Acessando box de logos
 var boxLogos = document.getElementById("logo-box");
 
@@ -1148,6 +1151,7 @@ window.onload = () => {
 }
 
 // ==== MENU: SALVAR ==== //
+
 // Esta opção permite salvar vários arquivos de waypoints para múltiplos voos
 // Acessando botão que dispara a função para criar um arquivo .txt
 var btnSave = document.getElementById("btn-save");
@@ -1498,7 +1502,7 @@ function saveFullPath() {
 // == CRIAÇÃO DO REGISTRO DO PLANO DE VOO == //
 function saveFlightPlanToStorage(filenameRoutes, timestamp, coordinates, blobRoutes) {
 
-    displayOrHiddenElementsForPrintScreen('none');
+    removeElementsForPrintScreen();
 
     html2canvas(document.body).then(canvas => {
 
@@ -1510,8 +1514,6 @@ function saveFlightPlanToStorage(filenameRoutes, timestamp, coordinates, blobRou
         return { blobImg, filenameImg, dataURL };
 
     }).then((image) => {
-
-        displayOrHiddenElementsForPrintScreen('block');
 
         const flight_plan = new File([blobRoutes], filenameRoutes);
 
@@ -1544,12 +1546,17 @@ function saveFlightPlanToStorage(filenameRoutes, timestamp, coordinates, blobRou
 }
 
 // ==== CLEAN MAP BEFORE PRINT SCREEN OR DISPLAY AGAIN AFTER ==== //
-function displayOrHiddenElementsForPrintScreen(value) {
-    btnMenu.style.display = value;
-    btn.style.display = value;
-    menuOptions.style.display = value;
-    boxLogos.style.display = value;
-    calculationBox.style.display = value;
+function removeElementsForPrintScreen() {
+    btnMenu.style.display = 'none';
+    btn.style.display = 'none';
+    menuOptions.style.display = 'none';
+    boxLogos.style.display = 'none';
+    calculationBox.style.display = 'none';
+    markerSideMenu.style.display = 'none'
+    map.removeControl(mapBoxGeocoder);
+    map.removeControl(draw);
+    map.removeControl(mapBoxNavigationControl);
+    marcador.remove();
 }
 
 // ========= SALVANDO AS ROTAS GERADAS EM ARQUIVO .TXT ========= //
@@ -1705,8 +1712,6 @@ function importKMLPoint(e) {
     cleanLayers();
     cleanPolygon();
 
-    //console.log(marcador);
-    // Apagando o marcador anterior
     marcador.remove();
 
     var file = e.target.files[0];
@@ -1886,7 +1891,7 @@ function openTxtFileFromStorage(contents) {
     cleanLayers();
     cleanPolygon();
 
-    openTxtFile(contents);
+    openTxtFileFromComputerOrStorage(contents);
 }
 
 function openTxtFileFromComputer(e) {
@@ -1905,7 +1910,7 @@ function openTxtFileFromComputer(e) {
         // Conteúdo completo do arquivo
         var contents = e.target.result;
 
-        openTxtFile(contents);
+        openTxtFileFromComputerOrStorage(contents);
 
     };
 
@@ -1913,8 +1918,7 @@ function openTxtFileFromComputer(e) {
 
 }
 
-function openTxtFile(contents) {
-
+function openTxtFileFromComputerOrStorage(contents) {
     // Quebrando as linhas do arquivo em um array
     var lines = contents.split("\n");
 
@@ -1933,7 +1937,7 @@ function openTxtFile(contents) {
     document.getElementById("label-altitude").innerHTML = "Altitude: " + Number(txtAltitude[10]).toFixed(0) + "m";
 
     // Array que armazenará todos os waypoints da rota do arquivo
-    var txtPath = [];
+    txtPath = [];
     index = 0;
 
     // Quebrando todas as linhas nos espaços \t
@@ -1948,7 +1952,7 @@ function openTxtFile(contents) {
             txtPath[index] = [Number(line[9]), Number(line[8])];
             index++
         }
-        //console.log(Number(line[3]));
+        console.log(Number(line[3]));
 
     }
 
@@ -1986,6 +1990,8 @@ function openTxtFile(contents) {
     drawTxtArea(txtArea);
     calculateTxtArea();
 }
+
+// =============================================================================================================//
 
 // == CALCULANDO A DISTÂNCIA TOTAL DA ROTA IMPORTADA A PARTIR DO ARQUIVO == //
 function calculateTxtDistance(txtPath) {

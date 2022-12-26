@@ -33,7 +33,7 @@ class FlightPlanModuleController extends Controller
         );
     }
 
-    public function exportAsCsv(Request $request)
+    public function exportTableAsCsv(Request $request)
     {
         ob_end_clean();
         ob_start();
@@ -64,7 +64,7 @@ class FlightPlanModuleController extends Controller
     public function destroy(Request $request): \Illuminate\Http\Response
     {
         Gate::authorize('flight_plans_write');
-
+        
         return $this->service->delete($request->ids);;
     }
 }

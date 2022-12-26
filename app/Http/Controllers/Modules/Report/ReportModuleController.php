@@ -34,7 +34,7 @@ class ReportModuleController extends Controller
         );
     }
 
-    public function exportAsCsv(Request $request)
+    public function exportTableAsCsv(Request $request)
     {
         ob_end_clean();
         ob_start();
@@ -51,6 +51,7 @@ class ReportModuleController extends Controller
     public function store(ReportStoreRequest $request): \Illuminate\Http\Response
     {
         Gate::authorize('reports_write');
+       
         return $this->service->createOne($request->only(['name', 'file', 'blob', 'service_order_id']));
     }
 

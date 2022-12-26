@@ -1,6 +1,6 @@
 import * as React from 'react';
 // Material UI
-import { Tooltip, IconButton, Grid, TextField, InputAdornment, Box, Dialog, DialogContent, Button, AppBar, Toolbar, Slide } from "@mui/material";
+import { Tooltip, IconButton, Grid, TextField, InputAdornment, Box, Dialog, DialogContent, Button, AppBar, Toolbar, Slide, Divider } from "@mui/material";
 import { DataGrid, ptBR } from '@mui/x-data-grid';
 import CloseIcon from '@mui/icons-material/Close';
 // Axios
@@ -89,7 +89,7 @@ export const FlightPlansForServiceOrderModal = React.memo((props) => {
     const [controlledSelection, setControlledSelection] = React.useState([]); // For grid controll
     const [loading, setLoading] = React.useState(true);
     const [reload, setReload] = React.useState(false);
-    const [open, setOpen] = React.useState();
+    const [open, setOpen] = React.useState(false);
 
     // ============================================================================== FUNCTIONS ============================================================================== //
 
@@ -100,7 +100,6 @@ export const FlightPlansForServiceOrderModal = React.memo((props) => {
     }, [reload]);
 
     function fetchRecords() {
-
 
         let http_request = "api/load-flight-plans-service-order?";
         if (props.serviceOrderId != null) {
@@ -143,14 +142,15 @@ export const FlightPlansForServiceOrderModal = React.memo((props) => {
     }
 
     const handleSelection = (newSelectedIds) => {
-
         // Save only ids for grid controll
         setControlledSelection(newSelectedIds);
-
     }
 
     const handleClickOpen = () => {
         setOpen(true);
+        setControlledSelection(() => {
+            return props.selectedFlightPlans.map((item) => item.id);
+        });
     }
 
     const handleClose = () => {
@@ -165,9 +165,12 @@ export const FlightPlansForServiceOrderModal = React.memo((props) => {
         const newSelectedIds = controlledSelection;
 
         // Find unchanged selections to preserve data - get entire record
-        let preserved_selections = [];
+        let preservedFlightPlansWithEquipments = [];
         if (props.selectedFlightPlans.length > 0) {
-            preserved_selections = props.selectedFlightPlans.filter((props_record) => {
+
+            // The preserveds array receives the already selected preserving the formatting
+            // Preserve the formatting is necesary to not unselect the equipments if already selected
+            preservedFlightPlansWithEquipments = props.selectedFlightPlans.filter((props_record) => {
                 if (newSelectedIds.includes(props_record.id)) {
                     return props_record;
                 }
@@ -176,18 +179,32 @@ export const FlightPlansForServiceOrderModal = React.memo((props) => {
 
         // Get entire flight plan data record by ID - just for new selections
         const newSelectedFlightPlans = records.filter((record) => {
+
+            let preservedSelectionsIds = preservedFlightPlansWithEquipments.map((item) => item.id);
+
             // Record ID must exists in newSelectedIds and not in preserved_selections ids array
-            if (newSelectedIds.includes(record.id) && !preserved_selections.map((item) => item.id).includes(record.id)) {
+            if (newSelectedIds.includes(record.id) && !preservedSelectionsIds.includes(record.id)) {
                 return record;
             }
         })
 
         const newSelectedFlightPlansWithEquipments = newSelectedFlightPlans.map((item) => {
-            return { ...item, drone_id: "0", battery_id: "0", equipment_id: "0" };
-        })
+            return { id: item.id, name: item.name, drone_id: "0", battery_id: "0", equipment_id: "0" };
+        });
 
+        /*
+        console.log('----------------------------------------------')
+        console.log(newSelectedFlightPlansWithEquipments)
+        console.log(preservedFlightPlansWithEquipments)
 
-        props.setSelectedFlightPlans([...newSelectedFlightPlansWithEquipments, ...preserved_selections]);
+        console.log('----------------------------------------------')
+        console.log([...newSelectedFlightPlansWithEquipments, ...preservedFlightPlansWithEquipments].sort((a, b) => a.id - b.id));
+        */
+
+        props.setSelectedFlightPlans(() => {
+            return [...newSelectedFlightPlansWithEquipments, ...preservedFlightPlansWithEquipments].sort((a, b) => a.id - b.id);
+        });
+
     }
 
     return (

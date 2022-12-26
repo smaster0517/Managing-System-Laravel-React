@@ -50,7 +50,7 @@ class FlightPlan extends Model
     */
     function user()
     {
-        return $this->belongsTo(User::class, "creator_id");
+        return $this->belongsTo(User::class, "creator_id")->withTrashed();
     }
 
     /*
@@ -68,4 +68,14 @@ class FlightPlan extends Model
     {
         return $this->morphOne(Image::class, 'imageable');
     }
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'created_at' => 'date:Y-m-d',
+        'updated_at' => 'date:Y-m-d'
+    ];
 }

@@ -13,6 +13,7 @@ import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { faPen } from '@fortawesome/free-solid-svg-icons';
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 // Custom
+import { ModalImage } from '../../../../shared/modals/dialog/ModalImage';
 import { CreateEquipment } from './formulary/CreateEquipmentFormulary';
 import { DeleteEquipment } from './formulary/DeleteEquipmentFormulary';
 import { UpdateEquipment } from './formulary/UpdateEquipmentFormulary';
@@ -21,6 +22,8 @@ import { ExportTableData } from '../../../../shared/modals/dialog/ExportTableDat
 import { TableToolbar } from '../../../../shared/table_toolbar/TableToolbar';
 import { useAuthentication } from "../../../../context/InternalRoutesAuth/AuthenticationContext";
 import axios from "../../../../../services/AxiosApi";
+// Moment
+import moment from 'moment';
 
 const columns = [
   { field: 'id', headerName: 'ID', width: 90 },
@@ -31,13 +34,14 @@ const columns = [
     sortable: false,
     editable: false,
     renderCell: (data) => {
-      return <img src={data.row.image_url} style={{ borderRadius: 5, width: '60px', height: '60px' }} />
+      return <ModalImage image_url={data.row.image_url} />
     }
   },
   {
     field: 'name',
     headerName: 'Nome',
     flex: 1,
+    minWidth: 200,
     sortable: true,
     editable: false,
   },
@@ -45,7 +49,8 @@ const columns = [
     field: 'manufacturer',
     headerName: 'Fabricante',
     type: 'number',
-    width: 150,
+    flex: 1,
+    minWidth: 200,
     headerAlign: 'left',
     sortable: true,
     editable: false
@@ -55,28 +60,31 @@ const columns = [
     headerName: 'Modelo',
     sortable: true,
     editable: false,
-    flex: 1
+    flex: 1,
+    minWidth: 200
   },
   {
     field: 'record_number',
     headerName: 'Nº registro',
     sortable: true,
     editable: false,
-    width: 120,
+    flex: 1,
+    minWidth: 150
   },
   {
     field: 'serial_number',
     headerName: 'Nº serial',
     sortable: true,
     editable: false,
-    width: 120,
+    flex: 1,
+    minWidth: 150
   },
   {
     field: 'weight',
     headerName: 'Peso',
     sortable: true,
     editable: false,
-    width: 120,
+    width: 100
   },
   {
     field: 'purchase_date',
@@ -84,13 +92,17 @@ const columns = [
     sortable: true,
     editable: false,
     width: 120,
+    valueGetter: (data) => {
+      return data.row.purchase_date != "nunca" ? moment(data.row.purchase_date).format("DD/MM/YYYY") : data.row.purchase_date
+    }
   },
   {
     field: 'observation',
     headerName: 'Observação',
     sortable: true,
     editable: false,
-    width: 120,
+    flex: 1,
+    minWidth: 200
   },
 ];
 
@@ -248,7 +260,7 @@ export const EquipmentPanel = React.memo(() => {
           </Tooltip>
         </Grid>
 
-        <Grid item xs>
+        <Grid item xs={12}>
           <TextField
             fullWidth
             placeholder={"Pesquisar equipamento por ID e nome"}

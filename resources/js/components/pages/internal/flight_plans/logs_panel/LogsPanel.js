@@ -1,6 +1,6 @@
 import * as React from 'react';
 // Material UI
-import { Tooltip, IconButton, Grid, TextField, InputAdornment, Box } from "@mui/material";
+import { Tooltip, IconButton, Grid, TextField, InputAdornment, Box, Chip } from "@mui/material";
 import { DataGrid, ptBR } from '@mui/x-data-grid';
 import { useSnackbar } from 'notistack';
 // Fonts Awesome
@@ -12,7 +12,7 @@ import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { faPen } from '@fortawesome/free-solid-svg-icons';
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import { faImage } from '@fortawesome/free-solid-svg-icons';
-import { faClipboard } from '@fortawesome/free-solid-svg-icons';
+import { faFile } from '@fortawesome/free-solid-svg-icons';
 // Custom
 import { ModalImage } from '../../../../shared/modals/dialog/ModalImage';
 import axios from "../../../../../services/AxiosApi";
@@ -29,6 +29,7 @@ const columns = [
         field: 'name',
         headerName: 'Nome',
         flex: 1,
+        minWidth: 200,
         sortable: true,
         editable: false
     },
@@ -37,57 +38,98 @@ const columns = [
         headerName: 'Arquivo',
         sortable: true,
         editable: false,
-        flex: 1
-    },
-    {
-        field: 'flight_plan_image',
-        headerName: 'Ver plano',
-        sortable: true,
-        editable: false,
-        width: 130,
-        renderCell: (data) => {
-
-            if (data.row.flight_plan != null) {
-                return (
-                    <ModalImage image_url={data.row.flight_plan.image_url} />
-                )
-            } else {
-                return (
-                    <Tooltip title="Vincule um plano de voo">
-                        <IconButton>
-                            <FontAwesomeIcon icon={faImage} color={"#E0E0E0"} size="sm" />
-                        </IconButton>
-                    </Tooltip>
-                )
-            }
-
-        }
+        flex: 1,
+        minWidth: 150
     },
     {
         field: 'service_order',
         headerName: 'Ordem de serviço',
         sortable: true,
         editable: false,
-        width: 150,
+        minWidth: 250,
         renderCell: (data) => {
-            if (data.row.service_order != null) {
-                return (
-                    <Tooltip title={`Número: ${data.row.service_order.number}`}>
-                        <IconButton>
-                            <FontAwesomeIcon icon={faClipboard} color={"#00713A"} size="sm" />
-                        </IconButton>
-                    </Tooltip>
-                )
-            } else {
-                return (
-                    <Tooltip title={"Vincule uma ordem de serviço"}>
-                        <IconButton>
-                            <FontAwesomeIcon icon={faClipboard} color={"#E0E0E0"} size="sm" />
-                        </IconButton>
-                    </Tooltip>
-                )
+
+            function chipStyle(related_service_order) {
+                if (related_service_order === null) {
+                    return { label: "Nenhuma", disabled: true, variant: "outlined" };
+                } else if (related_service_order != null) {
+                    return { label: related_service_order.number, color: related_service_order.deleted == 1 ? "error" : "success", variant: related_service_order.deleted == 1 ? "contained" : "outlined" };
+                }
             }
+
+            const chip_style = chipStyle(data.row.service_order);
+
+            return (
+                <Chip {...chip_style} />
+            )
         },
+    },
+    {
+        field: 'flight_plan_image',
+        headerName: 'Ver plano',
+        sortable: false,
+        editable: false,
+        minWidth: 130,
+        renderCell: (data) => {
+
+            function cellStyle(related_flight_plan) {
+                if (related_flight_plan === null) {
+                    return (
+                        <Tooltip title="Vincule um plano de voo">
+                            <IconButton>
+                                <FontAwesomeIcon icon={faImage} color={"#E0E0E0"} size="sm" />
+                            </IconButton>
+                        </Tooltip>
+                    )
+                } else {
+                    return (
+                        <ModalImage image_url={related_flight_plan.image_url} />
+                    )
+                }
+            }
+
+            return cellStyle(data.row.flight_plan);
+
+        }
+    },
+    {
+        field: 'export_txt',
+        headerName: 'Exportar KMZ',
+        sortable: false,
+        editable: false,
+        width: 150,
+        align: 'center',
+        renderCell: (data) => {
+
+            const { enqueueSnackbar } = useSnackbar();
+
+            function handleDownloadLog(filename) {
+                axios.get(`api/logs-module-download/${filename}`, null, {
+                    responseType: 'blob'
+                })
+                    .then(function (response) {
+                        enqueueSnackbar(`Download realizado com sucesso! Arquivo: ${filename}`, { variant: "success" });
+
+                        // Download forçado do arquivo com o conteúdo retornado do servidor
+                        const url = window.URL.createObjectURL(new Blob([response.data]));
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.setAttribute('download', `${filename}`); //or any other extension
+                        document.body.appendChild(link);
+                        link.click();
+
+                    })
+                    .catch(() => {
+                        enqueueSnackbar(`O download não foi realizado! Arquivo: ${filename}`, { variant: "error" });
+                    })
+            }
+
+            return (
+                <IconButton onClick={() => handleDownloadLog(data.row.filename)}>
+                    <FontAwesomeIcon icon={faFile} color={"#00713A"} size="sm" />
+                </IconButton>
+            )
+        }
     },
 ]
 
@@ -233,7 +275,7 @@ export const LogsPanel = () => {
                     </Tooltip>
                 </Grid>
 
-                <Grid item xs>
+                <Grid item xs={12}>
                     <TextField
                         fullWidth
                         placeholder={"Pesquisar plano por ID ou nome"}

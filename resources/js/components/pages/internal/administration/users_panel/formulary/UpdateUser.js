@@ -1,6 +1,6 @@
 import * as React from 'react';
 // Material UI
-import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip, IconButton, Box, Alert, LinearProgress, Divider } from '@mui/material';
+import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip, IconButton, Alert, LinearProgress, Divider, Grid } from '@mui/material';
 // Custom
 import { useAuthentication } from '../../../../../context/InternalRoutesAuth/AuthenticationContext';
 import { FormValidation } from '../../../../../../utils/FormValidation';
@@ -41,11 +41,10 @@ export const UpdateUser = React.memo((props) => {
     setOpen(false);
   }
 
-  function handleSubmitOperation(event) {
-    event.preventDefault();
+  function handleSubmit() {
     if (formValidation()) {
       setLoading(true);
-      requestServerOperation();
+      requestServer();
     }
   }
 
@@ -60,7 +59,7 @@ export const UpdateUser = React.memo((props) => {
     return !(emailValidate.error === true || nameValidate.error === true || profileValidate.error);
   }
 
-  function requestServerOperation() {
+  function requestServer() {
     axios.patch(`/api/admin-module-user/${controlledInput.id}`, {
       name: controlledInput.name,
       email: controlledInput.email,
@@ -140,50 +139,55 @@ export const UpdateUser = React.memo((props) => {
         <DialogTitle>ATUALIZAÇÃO DE USUÁRIO</DialogTitle>
         <Divider />
 
-        <Box component="form" noValidate onSubmit={handleSubmitOperation} >
-          <DialogContent>
+        <DialogContent>
 
-            <TextField
-              margin="dense"
-              name="id"
-              label="ID"
-              type="email"
-              fullWidth
-              variant="outlined"
-              value={controlledInput.id}
-              inputProps={{
-                readOnly: true
-              }}
-              sx={{ mb: 1 }}
-            />
+          <Grid container columns={12} spacing={1}>
 
-            <TextField
-              margin="dense"
-              name="name"
-              label="Nome completo"
-              fullWidth
-              variant="outlined"
-              onChange={handleInputChange}
-              value={controlledInput.name}
-              helperText={fieldErrorMessage.name}
-              error={fieldError.name}
-              sx={{ mb: 1 }}
-            />
-            <TextField
-              margin="dense"
-              name="email"
-              label="Endereço de email"
-              type="email"
-              fullWidth
-              variant="outlined"
-              onChange={handleInputChange}
-              defaultValue={props.record.email}
-              helperText={fieldErrorMessage.email}
-              error={fieldError.email}
-              sx={{ mb: 2 }}
-            />
+            <Grid item xs={12}>
+              <TextField
+                margin="dense"
+                name="id"
+                label="ID"
+                type="email"
+                fullWidth
+                variant="outlined"
+                value={controlledInput.id}
+                inputProps={{
+                  readOnly: true
+                }}
+              />
+            </Grid>
 
-            <Box sx={{ width: "auto", mb: 2 }}>
+            <Grid item xs={12}>
+              <TextField
+                margin="dense"
+                name="name"
+                label="Nome completo"
+                fullWidth
+                variant="outlined"
+                onChange={handleInputChange}
+                value={controlledInput.name}
+                helperText={fieldErrorMessage.name}
+                error={fieldError.name}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                margin="dense"
+                name="email"
+                label="Endereço de email"
+                type="email"
+                fullWidth
+                variant="outlined"
+                onChange={handleInputChange}
+                defaultValue={props.record.email}
+                helperText={fieldErrorMessage.email}
+                error={fieldError.email}
+              />
+            </Grid>
+
+            <Grid item xs={6}>
               <SelectAttributeControl
                 label_text={"Perfil"}
                 data_source={"/api/load-profiles"}
@@ -196,23 +200,24 @@ export const UpdateUser = React.memo((props) => {
                 setControlledInput={setControlledInput}
                 controlledInput={controlledInput}
               />
-            </Box>
+            </Grid>
 
-          </DialogContent>
+          </Grid>
 
-          {displayAlert.display &&
-            <Alert severity={displayAlert.type}>{displayAlert.message}</Alert>
-          }
+        </DialogContent>
 
-          {loading && <LinearProgress />}
+        {displayAlert.display &&
+          <Alert severity={displayAlert.type}>{displayAlert.message}</Alert>
+        }
 
-          <Divider />
-          <DialogActions>
-            <Button onClick={handleClose}>Cancelar</Button>
-            <Button type="submit" disabled={loading} variant="contained">Confirmar</Button>
-          </DialogActions>
+        {loading && <LinearProgress />}
 
-        </Box>
+        <Divider />
+        <DialogActions>
+          <Button onClick={handleClose}>Cancelar</Button>
+          <Button type="submit" disabled={loading} variant="contained" onClick={handleSubmit}>Confirmar</Button>
+        </DialogActions>
+
       </Dialog>
     </>
   );

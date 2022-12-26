@@ -1,7 +1,9 @@
 import * as React from 'react';
 // Material UI
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip, IconButton, Box, Alert, LinearProgress, TextField, FormHelperText, List, ListItem, ListItemText, ListSubheader, Avatar, ListItemAvatar, Grid, Divider } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip, IconButton, Box, Alert, LinearProgress, TextField, FormHelperText, List, ListItem, ListItemText, ListSubheader, Avatar, ListItemAvatar, Grid, Divider, DialogContentText } from '@mui/material';
 import MapIcon from '@mui/icons-material/Map';
+import LockIcon from '@mui/icons-material/Lock';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 // Custom
 import { useAuthentication } from '../../../../../context/InternalRoutesAuth/AuthenticationContext';
 import { FormValidation } from '../../../../../../utils/FormValidation';
@@ -20,14 +22,15 @@ import moment from 'moment';
 const initialFieldError = { start_date: false, end_date: false, creator_name: false, pilot_id: false, client_id: false, observation: false, status: false };
 const initialFieldErrorMessage = { start_date: "", end_date: "", creator_name: "", pilot_id: "", client_id: "", observation: "", flight_plan: "", status: "" };
 const initialDisplayAlert = { display: false, type: "", message: "" };
+const regexForSelectedFlightPlan = /^[1-9]\d*$/;
 
 export const UpdateOrder = React.memo((props) => {
 
   // ============================================================================== STATES ============================================================================== //
 
   const { AuthData } = useAuthentication();
-
   const [controlledInput, setControlledInput] = React.useState({
+    id: props.record.id,
     start_date: props.record.start_date,
     end_date: props.record.end_date,
     creator_name: props.record.users.creator.name,
@@ -42,8 +45,35 @@ export const UpdateOrder = React.memo((props) => {
   const [loading, setLoading] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   const [selectedFlightPlans, setSelectedFlightPlans] = React.useState([]);
+  const [canSave, setCanSave] = React.useState(false);
 
   // ============================================================================== FUNCTIONS ============================================================================== //
+
+  React.useEffect(() => {
+
+    setCanSave(() => {
+
+      if (selectedFlightPlans.length === 0) {
+        return false;
+      }
+
+      let selections_check = selectedFlightPlans.map((selected_flight_plan) => {
+
+        let current_check = 1;
+        for (let key in selected_flight_plan) {
+          if (key != "name" && !regexForSelectedFlightPlan.test(selected_flight_plan[key].toString())) {
+            current_check = 0;
+          }
+        }
+
+        return current_check;
+      });
+
+      return !selections_check.includes(0);
+
+    });
+
+  }, [selectedFlightPlans])
 
   function handleClickOpen() {
     setOpen(true);
@@ -67,15 +97,14 @@ export const UpdateOrder = React.memo((props) => {
     setOpen(false);
   }
 
-  function handleSubmit(event) {
-    event.preventDefault();
+  function handleSubmit() {
     if (formValidation()) {
       setLoading(true);
-      requestServerOperation();
+      requestServer();
     }
   }
 
-  const formValidation = () => {
+  function formValidation() {
 
     const dateValidate = verifyDateInterval();
     const pilotNameValidate = Number(controlledInput.pilot_id) != 0 ? { error: false, message: "" } : { error: true, message: "O piloto deve ser selecionado" };
@@ -109,7 +138,7 @@ export const UpdateOrder = React.memo((props) => {
     return moment(controlledInput.start_date).format('YYYY-MM-DD hh:mm:ss') < moment(controlledInput.end_date).format('YYYY-MM-DD hh:mm:ss');
   }
 
-  const requestServerOperation = () => {
+  function requestServer() {
     axios.patch(`/api/orders-module/${controlledInput.id}`, {
       start_date: moment(controlledInput.start_date).format('YYYY-MM-DD hh:mm:ss'),
       end_date: moment(controlledInput.end_date).format('YYYY-MM-DD hh:mm:ss'),
@@ -121,16 +150,17 @@ export const UpdateOrder = React.memo((props) => {
       flight_plans: selectedFlightPlans
     })
       .then(function (response) {
-        setLoading(false);
         successResponse(response);
       })
       .catch(function (error) {
-        setLoading(false);
         errorResponse(error.response);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }
 
-  const successResponse = (response) => {
+  function successResponse(response) {
     setDisplayAlert({ display: true, type: "success", message: response.data.message });
     setTimeout(() => {
       props.reloadTable((old) => !old);
@@ -183,8 +213,22 @@ export const UpdateOrder = React.memo((props) => {
     });
   }
 
-  const handleInputChange = (event) => {
+  function handleInputChange(event) {
     setControlledInput({ ...controlledInput, [event.target.name]: event.currentTarget.value });
+  }
+
+  function avatarSelectionStyle(selected_flight_plan) {
+
+    let is_completed = true;
+
+    for (let key in selected_flight_plan) {
+      if (key != "name" && !regexForSelectedFlightPlan.test(selected_flight_plan[key].toString())) {
+        is_completed = false;
+      }
+    }
+
+    return is_completed ? { bgcolor: "#4CAF50" } : { bgcolor: "#E0E0E0" };
+
   }
 
   // ============================================================================== STRUCTURES - MUI ============================================================================== //
@@ -208,6 +252,10 @@ export const UpdateOrder = React.memo((props) => {
         <Divider />
 
         <DialogContent>
+
+          <DialogContentText mb={3}>
+            Preencha todos os dados requisitados no formulário para a criação da ordem de serviço.
+          </DialogContentText>
 
           <Grid container spacing={1} mt={1}>
 
@@ -317,14 +365,14 @@ export const UpdateOrder = React.memo((props) => {
                         key={index}
                         secondaryAction={
                           <FlightPlanEquipmentSelection
-                            flightPlans={selectedFlightPlans}
-                            setFlightPlans={selectedFlightPlans}
-                            current={{ array_index: index, data: flight_plan }}
+                            selectedFlightPlans={selectedFlightPlans}
+                            setSelectedFlightPlans={setSelectedFlightPlans}
+                            current={flight_plan}
                           />
                         }
                       >
                         <ListItemAvatar>
-                          <Avatar>
+                          <Avatar sx={avatarSelectionStyle(flight_plan)}>
                             <MapIcon />
                           </Avatar>
                         </ListItemAvatar>
@@ -359,7 +407,17 @@ export const UpdateOrder = React.memo((props) => {
         <Divider />
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button type="submit" variant='contained' disabled={loading} onClick={handleSubmit}>Confirmar</Button>
+          {canSave &&
+            <Button variant="contained" startIcon={<LockOpenIcon />} onClick={handleSubmit} disabled={loading}>
+              Confirmar
+            </Button >
+          }
+
+          {!canSave &&
+            <Button variant="contained" startIcon={<LockIcon />} disabled>
+              Salvar
+            </Button >
+          }
         </DialogActions>
       </Dialog>
     </>

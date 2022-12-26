@@ -33,11 +33,18 @@ class FlightPlanModuleLogController extends Controller
         );
     }
 
-    public function exportAsCsv(Request $request)
+    public function exportTableAsCsv(Request $request)
     {
         ob_end_clean();
         ob_start();
         return Excel::download(new GenericExport(new Log(), $request->limit), 'logs.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
+
+    public function downloadLog(string $filename): \Illuminate\Http\Response
+    {
+        Gate::authorize('flight_plans_read');
+
+        return $this->service->download($filename);
     }
 
     public function store(Request $request): \Illuminate\Http\Response

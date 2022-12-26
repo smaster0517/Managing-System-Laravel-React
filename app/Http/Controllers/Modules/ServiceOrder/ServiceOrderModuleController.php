@@ -41,7 +41,7 @@ class ServiceOrderModuleController extends Controller
         }
     }
 
-    public function exportAsCsv(Request $request)
+    public function exportTableAsCsv(Request $request)
     {
         ob_end_clean();
         ob_start();
@@ -58,14 +58,14 @@ class ServiceOrderModuleController extends Controller
     public function update(ServiceOrderUpdateRequest $request, $id): \Illuminate\Http\Response
     {
         Gate::authorize('service_orders_write');
-
+        
         return $this->service->updateOne($request->only(["start_date", "end_date", "pilot_id", "creator_id", "client_id", "observation", "status", "number", "flight_plans"]), $id);
     }
 
     public function destroy(Request $request): \Illuminate\Http\Response
     {
         Gate::authorize('service_orders_write');
-
+      
         return $this->service->delete($request->ids);
     }
 }

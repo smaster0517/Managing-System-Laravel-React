@@ -1,14 +1,15 @@
 import * as React from 'react';
 // Material UI
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip, IconButton, Box, Alert, LinearProgress, TextField, FormHelperText, List, ListItem, ListItemText, ListSubheader, Avatar, ListItemAvatar, Grid, Divider } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Tooltip, IconButton, Box, Alert, LinearProgress, TextField, FormHelperText, List, ListItem, ListItemText, ListSubheader, Avatar, ListItemAvatar, Grid, Divider } from '@mui/material';
 import MapIcon from '@mui/icons-material/Map';
+import LockIcon from '@mui/icons-material/Lock';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 // Custom
 import axios from '../../../../../../services/AxiosApi';
 import { useAuthentication } from '../../../../../context/InternalRoutesAuth/AuthenticationContext';
 import { FormValidation } from '../../../../../../utils/FormValidation';
 import { SelectAttributeControl } from '../../../../../shared/input_select/SelectAttributeControl';
 import { DatePicker } from '../../../../../shared/date_picker/DatePicker';
-import { StatusRadio } from '../../../../../shared/radio_group/StatusRadio';
 import { FlightPlansForServiceOrderModal } from '../modal/FlightPlansForServiceOrderModal';
 import { FlightPlanEquipmentSelection } from '../modal/FlightPlanEquipmentSelection';
 // Fontsawesome
@@ -18,9 +19,10 @@ import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import moment from 'moment';
 
 const initialControlledInput = { pilot_id: "", client_id: "", observation: "", status: "1", start_date: moment(), end_date: moment() };
-const initialFieldError = { start_date: false, end_date: false, pilot_id: false, client_id: false, observation: false, flight_plans: false, status: false };
-const initialFieldErrorMessage = { start_date: "", end_date: "", pilot_id: "", client_id: "", observation: "", flight_plans: "", status: "" };
+const initialFieldError = { start_date: false, end_date: false, pilot_id: false, client_id: false, observation: false, flight_plans: false};
+const initialFieldErrorMessage = { start_date: "", end_date: "", pilot_id: "", client_id: "", observation: "", flight_plans: ""};
 const initialDisplatAlert = { display: false, type: "", message: "" };
+const regexForSelectedFlightPlan = /^[1-9]\d*$/;
 
 export const CreateOrder = React.memo((props) => {
 
@@ -34,27 +36,58 @@ export const CreateOrder = React.memo((props) => {
   const [loading, setLoading] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   const [selectedFlightPlans, setSelectedFlightPlans] = React.useState([]);
+  const [canSave, setCanSave] = React.useState(false);
 
   // ============================================================================== FUNCTIONS ============================================================================== //
+
+  // Verify if data is completed
+  React.useEffect(() => {
+
+    setCanSave(() => {
+
+      if (selectedFlightPlans.length === 0) {
+        return false;
+      }
+
+      // Will be an array with one and/or zeros
+      let selections_check = selectedFlightPlans.map((selected_flight_plan) => {
+
+        let current_check = 1;
+        for (let key in selected_flight_plan) {
+          if (key != "name" && !regexForSelectedFlightPlan.test(selected_flight_plan[key].toString())) {
+            current_check = 0;
+          }
+        }
+
+        return current_check;
+      });
+
+      // If the array has 0, exists invalid data
+      return !selections_check.includes(0);
+
+    });
+
+  }, [selectedFlightPlans]);
 
   function handleClickOpen() {
     setOpen(true);
   }
 
-  const handleClose = () => {
+  function handleClose() {
     setOpen(false);
     setLoading(false);
     setFieldError(initialFieldError);
     setFieldErrorMessage(initialFieldErrorMessage);
     setDisplayAlert(initialDisplatAlert);
     setControlledInput(initialControlledInput);
+    setSelectedFlightPlans([]);
   }
 
   function handleSubmit() {
     if (!formValidation()) {
       return '';
     }
-    requestServerOperation();
+    requestServer();
   }
 
   function formValidation() {
@@ -64,15 +97,13 @@ export const CreateOrder = React.memo((props) => {
     const clientNameValidate = Number(controlledInput.client_id) != 0 ? { error: false, message: "" } : { error: true, message: "O cliente deve ser selecionado" };
     const observationValidate = FormValidation(controlledInput.observation, 3, null, null, null);
     const fligthPlansValidate = selectedFlightPlans != null ? { error: false, message: "" } : { error: true, message: "" };
-    const statusValidate = Number(controlledInput.status) != 0 && Number(controlledInput.status) != 1 ? { error: true, message: "O status deve ser 1 ou 0" } : { error: false, message: "" };
 
     setFieldError({
       date_interval: dateValidate.error,
       pilot_id: pilotNameValidate.error,
       client_id: clientNameValidate.error,
       observation: observationValidate.error,
-      flight_plans: fligthPlansValidate.error,
-      status: statusValidate.error
+      flight_plans: fligthPlansValidate.error
     });
 
     setFieldErrorMessage({
@@ -80,11 +111,10 @@ export const CreateOrder = React.memo((props) => {
       pilot_id: pilotNameValidate.message,
       client_id: clientNameValidate.message,
       observation: observationValidate.message,
-      flight_plans: fligthPlansValidate.message,
-      status: statusValidate.message
+      flight_plans: fligthPlansValidate.message
     });
 
-    return !(dateValidate.error || pilotNameValidate.error || clientNameValidate.error || observationValidate.error || fligthPlansValidate.error || statusValidate.error);
+    return !(dateValidate.error || pilotNameValidate.error || clientNameValidate.error || observationValidate.error || fligthPlansValidate.error);
 
   }
 
@@ -92,7 +122,7 @@ export const CreateOrder = React.memo((props) => {
     return moment(controlledInput.start_date).format('YYYY-MM-DD') < moment(controlledInput.end_date).format('YYYY-MM-DD') ? { error: false, message: '' } : { error: true, message: 'A data inicial deve anteceder a final' };
   }
 
-  function requestServerOperation() {
+  function requestServer() {
     setLoading(true);
 
     axios.post(`/api/orders-module`, {
@@ -101,7 +131,7 @@ export const CreateOrder = React.memo((props) => {
       pilot_id: controlledInput.pilot_id,
       client_id: controlledInput.client_id,
       observation: controlledInput.observation,
-      status: controlledInput.status,
+      status: true,
       flight_plans: selectedFlightPlans
     })
       .then(function (response) {
@@ -168,6 +198,20 @@ export const CreateOrder = React.memo((props) => {
     setControlledInput({ ...controlledInput, [event.target.name]: event.currentTarget.value });
   }
 
+  function avatarSelectionStyle(selected_flight_plan) {
+
+    let is_completed = true;
+
+    for (let key in selected_flight_plan) {
+      if (key != "name" && !regexForSelectedFlightPlan.test(selected_flight_plan[key].toString())) {
+        is_completed = false;
+      }
+    }
+
+    return is_completed ? { bgcolor: "#4CAF50" } : { bgcolor: "#E0E0E0" };
+
+  }
+
   // ============================================================================== STRUCTURES - MUI ============================================================================== //
 
   return (
@@ -189,6 +233,11 @@ export const CreateOrder = React.memo((props) => {
         <Divider />
 
         <DialogContent>
+
+          <DialogContentText mb={3}>
+            Preencha todos os dados requisitados no formulário para a criação da ordem de serviço.
+          </DialogContentText>
+
           <Grid container spacing={1}>
 
             <Grid item sx={6}>
@@ -298,12 +347,12 @@ export const CreateOrder = React.memo((props) => {
                           <FlightPlanEquipmentSelection
                             selectedFlightPlans={selectedFlightPlans}
                             setSelectedFlightPlans={setSelectedFlightPlans}
-                            current={{ array_index: index, data: flight_plan }}
+                            current={flight_plan}
                           />
                         }
                       >
                         <ListItemAvatar>
-                          <Avatar>
+                          <Avatar sx={avatarSelectionStyle(flight_plan)}>
                             <MapIcon />
                           </Avatar>
                         </ListItemAvatar>
@@ -316,14 +365,6 @@ export const CreateOrder = React.memo((props) => {
                   </ul>
                 </List>
               }
-            </Grid>
-
-            <Grid item xs={6}>
-              <StatusRadio
-                default={1}
-                setControlledInput={setControlledInput}
-                controlledInput={controlledInput}
-              />
             </Grid>
 
           </Grid>
@@ -339,7 +380,17 @@ export const CreateOrder = React.memo((props) => {
         <Divider />
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button type="submit" disabled={loading} variant="contained" onClick={handleSubmit}>Confirmar</Button>
+          {canSave &&
+            <Button variant="contained" startIcon={<LockOpenIcon />} onClick={handleSubmit} disabled={loading}>
+              Confirmar
+            </Button >
+          }
+
+          {!canSave &&
+            <Button variant="contained" startIcon={<LockIcon />} disabled>
+              Confirmar
+            </Button >
+          }
         </DialogActions>
       </Dialog>
     </>
