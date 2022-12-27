@@ -32,7 +32,6 @@ class FlightPlansLogPanelResource extends JsonResource
                 "id" => $log->id,
                 "name" => $log->name,
                 "service_order" => null,
-                "flight_plan" => null,
                 "file" => [
                     "path" => $log->file->path,
                     "filename" => $log->file->name
@@ -56,14 +55,13 @@ class FlightPlansLogPanelResource extends JsonResource
                     "number" => $service_order->number,
                     "status" => $service_order->status,
                     "created_at" => strtotime($service_order->created_at),
-                    "deleted" => is_null($service_order->deleted_at) ? 0 : 1
-                ];
-
-                $this->formatedData["records"][$row]["flight_plan"] = [
-                    "id" =>  $flight_plan->id,
-                    "path" => $flight_plan->file->path,
-                    "image_url" => Storage::url($flight_plan->image->path),
-                    "deleted" => is_null($flight_plan->deleted_at) ? 0 : 1
+                    "deleted" => is_null($service_order->deleted_at) ? 0 : 1,
+                    "flight_plan" => [
+                        "id" =>  $flight_plan->id,
+                        "path" => $flight_plan->file->path,
+                        "image_url" => Storage::url($flight_plan->image->path),
+                        "deleted" => is_null($flight_plan->deleted_at) ? 0 : 1
+                    ]
                 ];
             }
         }

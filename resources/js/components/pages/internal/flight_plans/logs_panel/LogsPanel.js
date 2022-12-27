@@ -39,7 +39,10 @@ const columns = [
         sortable: true,
         editable: false,
         flex: 1,
-        minWidth: 150
+        minWidth: 150,
+        valueGetter: (data) => {
+            return data.row.file.filename;
+        }
     },
     {
         field: 'service_order',
@@ -72,8 +75,8 @@ const columns = [
         minWidth: 130,
         renderCell: (data) => {
 
-            function cellStyle(related_flight_plan) {
-                if (related_flight_plan === null) {
+            function cellStyle(related_service_order) {
+                if (related_service_order === null) {
                     return (
                         <Tooltip title="Vincule um plano de voo">
                             <IconButton>
@@ -83,12 +86,12 @@ const columns = [
                     )
                 } else {
                     return (
-                        <ModalImage image_url={related_flight_plan.image_url} />
+                        <ModalImage image_url={related_service_order.flight_plan.image_url} />
                     )
                 }
             }
 
-            return cellStyle(data.row.flight_plan);
+            return cellStyle(data.row.service_order);
 
         }
     },
@@ -125,7 +128,7 @@ const columns = [
             }
 
             return (
-                <IconButton onClick={() => handleDownloadLog(data.row.filename)}>
+                <IconButton onClick={() => handleDownloadLog(data.row.file.filename)}>
                     <FontAwesomeIcon icon={faFile} color={"#00713A"} size="sm" />
                 </IconButton>
             )

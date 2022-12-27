@@ -32,14 +32,13 @@ class FlightPlanLogRepository implements RepositoryInterface
 
             $log = $this->logModel->create([
                 "name" => $data->get("name"),
-                "filename" => $data->get("filename"),
                 "path" => $data->get("path"),
                 "timestamp" => $data->get("timestamp")
             ]);
 
             // File save
             $log->file()->create([
-                "name" => $data->get("routes")["filename"],
+                "name" => $data->get("filename"),
                 "path" => $data->get("path")
             ]);
 
