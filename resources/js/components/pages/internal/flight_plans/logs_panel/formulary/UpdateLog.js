@@ -29,8 +29,8 @@ export const UpdateLog = React.memo((props) => {
     // Select Inputs
     const [serviceOrdersByFlightPlan, setServiceOrdersByFlightPlan] = React.useState([]);
     const [flightPlans, setFlightPlans] = React.useState([]);
-    const [selectedFlightPlan, setSelectedFlightPlan] = React.useState("");
-    const [selectedServiceOrder, setSelectedServiceOrder] = React.useState("");
+    const [selectedFlightPlan, setSelectedFlightPlan] = React.useState(null);
+    const [selectedServiceOrder, setSelectedServiceOrder] = React.useState(null);
 
     // ============================================================================== FUNCTIONS ============================================================================== //
 
@@ -61,6 +61,11 @@ export const UpdateLog = React.memo((props) => {
     }
 
     React.useEffect(() => {
+
+        if (selectedFlightPlan === null) {
+            return '';
+        }
+
         const url = "/api/load-service-orders-by-flight-plan?flight_plan_id=" + selectedFlightPlan;
         axios.get(url, {
         })
@@ -71,6 +76,7 @@ export const UpdateLog = React.memo((props) => {
                 setLoading(false);
                 errorResponse(error.response);
             })
+
     }, [selectedFlightPlan]);
 
     function handleSubmit() {

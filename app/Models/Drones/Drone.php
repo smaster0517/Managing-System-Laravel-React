@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 // Custom
 use App\Models\Images\Image;
 use App\Models\Pivot\ServiceOrderFlightPlan;
+use App\Models\FlightPlans\FlightPlan;
+use App\Models\ServiceOrders\ServiceOrder;
 
 class Drone extends Model
 {
@@ -75,4 +77,6 @@ class Drone extends Model
     {
         return $this->belongsTo(ServiceOrderFlightPlan::class, "service_order_flight_plan_id", "id");
     }
+
+    
 }

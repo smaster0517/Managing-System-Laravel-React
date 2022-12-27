@@ -36,7 +36,14 @@ class EquipmentsPanelResource extends JsonResource
                 "model" => $equipment->model,
                 "record_number" => $equipment->record_number,
                 "serial_number" => $equipment->serial_number,
-                "total_service_orders" => $equipment->service_orders()->distinct('service_order_id')->count(),
+                "service_orders" => [
+                    "total" => $equipment->service_order_flight_plan()->distinct('service_order_id')->count(),
+                    "data" => []
+                ],
+                "incidents" => [
+                    "total" => "",
+                    "data" => []
+                ],
                 "weight" => $equipment->weight,
                 "observation" => $equipment->observation,
                 "purchase_date" => empty($equipment->purchase_date) ? "nunca" : $equipment->purchase_date,
@@ -48,9 +55,11 @@ class EquipmentsPanelResource extends JsonResource
             // Equipment is used in a flight plan that exists in a service order
             if (!is_null($equipment->service_order_flight_plan)) {
 
-                // Service order and flight plan of pivot
-                $service_order = $equipment->service_order_flight_plan->service_order;
-                $flight_plan = $equipment->service_order_flight_plan->flight_plan;
+                foreach ($equipment->service_order_flight_plan as $pivot_row => $service_order_flight_plan) {
+                    // Service order and flight plan of pivot
+                    $service_order = $service_order_flight_plan->service_order;
+                    $flight_plan = $service_order_flight_plan->flight_plan;
+                }
             }
         }
 

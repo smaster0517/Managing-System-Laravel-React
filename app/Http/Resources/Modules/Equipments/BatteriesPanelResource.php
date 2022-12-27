@@ -34,7 +34,14 @@ class BatteriesPanelResource extends JsonResource
                 "name" => $battery->name,
                 "manufacturer" => $battery->manufacturer,
                 "model" => $battery->model,
-                "total_service_orders" => $battery->service_orders()->distinct('service_order_id')->count(),
+                "service_orders" => [
+                    "total" => $battery->service_order_flight_plan()->distinct('service_order_id')->count(),
+                    "data" => []
+                ],
+                "incidents" => [
+                    "total" => "",
+                    "data" => []
+                ],
                 "serial_number" => $battery->serial_number,
                 "last_charge" => empty($battery->last_charge) ? "nunca" : $battery->last_charge,
                 "created_at" => $battery->created_at,
@@ -45,11 +52,11 @@ class BatteriesPanelResource extends JsonResource
             // Battery is used in a flight plan that exists in a service order
             if (!is_null($battery->service_order_flight_plan)) {
 
-                // Service order and flight plan of pivot
-                $service_order = $battery->service_order_flight_plan->service_order;
-                $flight_plan = $battery->service_order_flight_plan->flight_plan;
-
-
+                foreach ($battery->service_order_flight_plan as $pivot_row => $service_order_flight_plan) {
+                    // Service order and flight plan of pivot
+                    $service_order = $service_order_flight_plan->service_order;
+                    $flight_plan = $service_order_flight_plan->flight_plan;
+                }
             }
         }
 

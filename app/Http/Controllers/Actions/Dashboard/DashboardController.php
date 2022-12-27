@@ -3,29 +3,24 @@
 namespace App\Http\Controllers\Actions\Dashboard;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 // Custom
 use App\Models\Users\User;
 use App\Models\Profiles\Profile;
 use App\Models\FlightPlans\FlightPlan;
 use App\Models\ServiceOrders\ServiceOrder;
 use App\Models\Reports\Report;
-use App\Models\Accesses\AccessedDevice;
 use App\Models\Accesses\AnnualTraffic;
 
 class DashboardController extends Controller
 {
 
-    function __construct(User $userModel, Profile $profileModel, FlightPlan $flightPlanModel, ServiceOrder $serviceOrderModel, Report $reportModel, AccessedDevice $accessedDevicesModel, AnnualTraffic $annualTrafficModel)
+    function __construct(User $userModel, Profile $profileModel, FlightPlan $flightPlanModel, ServiceOrder $serviceOrderModel, Report $reportModel, AnnualTraffic $annualTrafficModel)
     {
         $this->userModel = $userModel;
         $this->profileModel = $profileModel;
         $this->flightPlanModel = $flightPlanModel;
         $this->serviceOrderModel = $serviceOrderModel;
         $this->reportModel = $reportModel;
-        $this->accessedDevicesModel = $accessedDevicesModel;
         $this->annualTrafficModel = $annualTrafficModel;
     }
 

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Actions;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\FlightPlans\FlightPlan;
 
 class LoadFlightPlansController extends Controller
