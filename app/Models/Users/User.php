@@ -15,7 +15,6 @@ use App\Models\Modules\Module;
 use App\Models\ServiceOrders\ServiceOrder;
 use App\Models\PasswordResets\PasswordReset;
 use App\Models\Accesses\AnnualTraffic;
-use App\Models\Accesses\AccessedDevice;
 use App\Models\Sessions\Session;
 
 class User extends Authenticatable
@@ -23,6 +22,28 @@ class User extends Authenticatable
     use HasFactory, SoftDeletes, Notifiable;
 
     protected $guarded = [];
+
+    /**
+     * First name acessor.
+     *
+     * @param  \Illuminate\Notifications\Notification  $notification
+     * @return string
+     */
+    public function getFirstNameAttribute()
+    {
+        return explode(" ", $this->name)[0];
+    }
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'created_at' => 'date:Y-m-d',
+        'updated_at' => 'date:Y-m-d',
+        'last_access' => 'date:Y-m-d'
+    ];
 
     /*
     * Scope for search
@@ -101,14 +122,6 @@ class User extends Authenticatable
     }
 
     /*
-    * Relationship one to one with devices accessed table
-    */
-    function devices_acessed()
-    {
-        return $this->hasOne(AccessedDevice::class, "user_id");
-    }
-
-    /*
     * Relationship with sessions table
     */
     function sessions()
@@ -136,26 +149,4 @@ class User extends Authenticatable
     {
         return $this->email;
     }
-
-    /**
-     * First name acessor.
-     *
-     * @param  \Illuminate\Notifications\Notification  $notification
-     * @return string
-     */
-    public function getFirstNameAttribute()
-    {
-        return explode(" ", $this->name)[0];
-    }
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'created_at' => 'date:Y-m-d',
-        'updated_at' => 'date:Y-m-d',
-        'last_access' => 'date:Y-m-d'
-    ];
 }

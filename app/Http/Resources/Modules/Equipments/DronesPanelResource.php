@@ -45,6 +45,16 @@ class DronesPanelResource extends JsonResource
                 "updated_at" => $drone->updated_at
             ];
 
+            // Related flight plan that exists in service order
+            // Drone is used in a flight plan that exists in a service order
+            if (!is_null($drone->service_order_flight_plan)) {
+
+                // Service order and flight plan of pivot
+                $service_order = $drone->service_order_flight_plan->service_order;
+                $flight_plan = $drone->service_order_flight_plan->flight_plan;
+
+
+            }
         }
 
         $this->formatedData["total_records"] = $this->data->total();

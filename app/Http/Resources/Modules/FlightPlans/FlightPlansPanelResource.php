@@ -31,22 +31,26 @@ class FlightPlansPanelResource extends JsonResource
 
             $this->formatedData["records"][$flight_plan_row] = [
                 "id" => $flight_plan->id,
-                "image_url" => Storage::url($flight_plan->image->path),
+                "image" => [
+                    "url" => Storage::url($flight_plan->image->path)
+                ],
                 "creator" => [
                     "name" => $flight_plan->user->name,
                     "email" => $flight_plan->user->email,
                     "deleted_at" => $flight_plan->user->deleted_at
                 ],
                 "name" => $flight_plan->name,
-                "service_orders" => [
-                    "active" => 0,
-                    "inactive" => 0,
-                    "data" => []
+                "service_orders" => [],
+                "logs" => [
+                    "total" => 0
                 ],
-                "logs" => [],
-                "total_incidents" => 0,
-                "total_logs" => 0,
-                "file" => $flight_plan->file,
+                "incidents" => [
+                    "total" => 0
+                ],
+                "file" => [
+                    "path" => $flight_plan->file->path,
+                    "filename" => $flight_plan->file->name
+                ],
                 "localization" => [
                     "coordinates" => $flight_plan->coordinates,
                     "state" => $flight_plan->state,
@@ -68,23 +72,19 @@ class FlightPlansPanelResource extends JsonResource
                     $incidents = Incident::where("service_order_flight_plan_id", $service_order->pivot->id)->get();
                     $logs = Log::where("service_order_flight_plan_id", $service_order->pivot->id)->get();
 
-                    $this->formatedData["records"][$flight_plan_row]["service_orders"]["data"][$service_order_row] = [
+                    $this->formatedData["records"][$flight_plan_row]["service_orders"][$service_order_row] = [
                         "id" => $service_order->id,
+                        "finished" => !is_null($service_order->report_id),
                         "number" => $service_order->number,
                         "status" => $service_order->status,
                         "created_at" => strtotime($service_order->created_at),
+                        "deleted_at" => strtotime($service_order->deleted_at),
                         "incidents" => $incidents, // incidents of flight plan in this service order
                         "logs" => $logs // logs of flight plan in this service order
                     ];
 
-                    if ($service_order->status) {
-                        $this->formatedData["records"][$flight_plan_row]["service_orders"]["active"]++;
-                    } else {
-                        $this->formatedData["records"][$flight_plan_row]["service_orders"]["inactive"]++;
-                    }
-
-                    $this->formatedData["records"][$flight_plan_row]["total_incidents"] += $incidents->count();
-                    $this->formatedData["records"][$flight_plan_row]["total_logs"] += $logs->count();
+                    $this->formatedData["records"][$flight_plan_row]["incidents"]["total"] += $incidents->count();
+                    $this->formatedData["records"][$flight_plan_row]["logs"]["total"] += $logs->count();
                 }
             }
         }

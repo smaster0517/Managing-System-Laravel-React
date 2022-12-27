@@ -33,7 +33,10 @@ class FlightPlansLogPanelResource extends JsonResource
                 "name" => $log->name,
                 "service_order" => null,
                 "flight_plan" => null,
-                "filename" => $log->filename,
+                "file" => [
+                    "path" => $log->file->path,
+                    "filename" => $log->file->name
+                ],
                 "path" => $log->path,
                 "timestamp" => date('d-m-Y h:i', strtotime($log->timestamp)),
                 "created_at" => $log->created_at,
@@ -41,11 +44,11 @@ class FlightPlansLogPanelResource extends JsonResource
                 "deleted_at" => $log->deleted_at
             ];
 
+            // Related flight plan that exists in service order
             if (!is_null($log->service_order_flight_plan)) {
 
-                // Get related service order // Table "service_order_flight_plan"
+                // Service order and flight plan of pivot
                 $service_order = $log->service_order_flight_plan->service_order;
-                // Get related flight plan // Table "service_order_flight_plan"
                 $flight_plan = $log->service_order_flight_plan->flight_plan;
 
                 $this->formatedData["records"][$row]["service_order"] = [
@@ -58,7 +61,7 @@ class FlightPlansLogPanelResource extends JsonResource
 
                 $this->formatedData["records"][$row]["flight_plan"] = [
                     "id" =>  $flight_plan->id,
-                    "path" => $flight_plan->file,
+                    "path" => $flight_plan->file->path,
                     "image_url" => Storage::url($flight_plan->image->path),
                     "deleted" => is_null($flight_plan->deleted_at) ? 0 : 1
                 ];

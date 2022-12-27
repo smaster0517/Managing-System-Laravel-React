@@ -26,7 +26,7 @@ class FlightPlanService implements ServiceInterface
     function getPaginate(string $limit, string $page, string $search)
     {
         $data = $this->repository->getPaginate($limit, $page, $search);
-
+        
         if ($data->total() > 0) {
             return response(new FlightPlansPanelResource($data), 200);
         } else {
@@ -53,7 +53,7 @@ class FlightPlanService implements ServiceInterface
     function createOne(array $data)
     {
         if (is_null($data["routes_file"]) || is_null($data["image_file"])) {
-            return response(["message" => "Erro! O plano de voo não pode ser criado."], 500);
+            return response(["message" => "Erro! O arquivo ou a imagem não foram enviados."], 500);
         }
 
         // Routes file data

@@ -17,7 +17,6 @@ class CreateLogsTable extends Migration
             $table->id();
             $table->foreignId('service_order_flight_plan_id')->nullable(true)->constrained('service_order_flight_plan');
             $table->string('name')->unique();
-            // $table->string('filename');
             $table->string("path");
             $table->timestamp("timestamp");
             $table->timestamps();

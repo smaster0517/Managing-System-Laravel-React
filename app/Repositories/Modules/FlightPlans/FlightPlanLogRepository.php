@@ -21,7 +21,7 @@ class FlightPlanLogRepository implements RepositoryInterface
     function getPaginate(string $limit, string $page, string $search)
     {
         return $this->logModel
-            ->with("service_order_flight_plan")
+            ->with("service_order_flight_plan") 
             ->search($search) // scope
             ->paginate($limit, $columns = ['*'], $pageName = 'page', $page);
     }
@@ -35,6 +35,12 @@ class FlightPlanLogRepository implements RepositoryInterface
                 "filename" => $data->get("filename"),
                 "path" => $data->get("path"),
                 "timestamp" => $data->get("timestamp")
+            ]);
+
+            // File save
+            $log->file()->create([
+                "name" => $data->get("routes")["filename"],
+                "path" => $data->get("path")
             ]);
 
             Storage::disk('public')->put($data->get("path"), $data->get('file_content'));

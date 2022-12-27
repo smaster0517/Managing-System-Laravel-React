@@ -36,7 +36,7 @@ const columns = [
     editable: false,
     renderCell: (data) => {
       return (
-        <ModalImage image_url={data.row.image_url} />
+        <ModalImage image_url={data.row.image.url} />
       )
     }
   },
@@ -78,7 +78,7 @@ const columns = [
     sortable: true,
     editable: false,
     valueGetter: (data) => {
-      return data.row.service_orders.data.length;
+      return data.row.service_orders.length;
     }
   },
   {
@@ -89,7 +89,7 @@ const columns = [
     width: 120,
     align: 'center',
     valueGetter: (data) => {
-      return data.row.logs.length;
+      return data.row.logs.total;
     }
   },
   {
@@ -100,7 +100,7 @@ const columns = [
     width: 150,
     align: 'center',
     valueGetter: (data) => {
-      return data.row.total_incidents;
+      return data.row.incidents.total;
     }
   },
   {
@@ -112,7 +112,7 @@ const columns = [
     renderCell: (data) => {
       return (
         <IconButton>
-          <Link href={`/internal/map?file=${data.row.file}`} target="_blank">
+          <Link href={`/internal/map?file=${data.row.file.filename}`} target="_blank">
             <FontAwesomeIcon icon={faMap} color={"#00713A"} size="sm" />
           </Link>
         </IconButton>
@@ -152,7 +152,7 @@ const columns = [
       }
 
       return (
-        <IconButton onClick={() => handleDownloadFlightPlan(data.row.file)}>
+        <IconButton onClick={() => handleDownloadFlightPlan(data.row.file.filename)}>
           <FontAwesomeIcon icon={faFileLines} color={"#00713A"} size="sm" />
         </IconButton>
       )
@@ -218,7 +218,7 @@ const columns = [
       }
 
       return (
-        <IconButton onClick={() => handleDownloadFlightPlanAsCSV(data.row.file)}>
+        <IconButton onClick={() => handleDownloadFlightPlanAsCSV(data.row.file.filename)}>
           <FontAwesomeIcon icon={faFileCsv} color={"#00713A"} size="sm" />
         </IconButton>
       )
@@ -308,7 +308,7 @@ export function FlightPlansPanel() {
   return (
     <>
       <Grid container spacing={1} alignItems="center" mb={1}>
-
+        
         <Grid item>
           {selectedRecords.length > 0 &&
             <IconButton>

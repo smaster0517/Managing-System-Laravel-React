@@ -43,6 +43,15 @@ class EquipmentsPanelResource extends JsonResource
                 "created_at" => $equipment->created_at,
                 "updated_at" => $equipment->updated_at
             ];
+
+            // Related flight plan that exists in service order
+            // Equipment is used in a flight plan that exists in a service order
+            if (!is_null($equipment->service_order_flight_plan)) {
+
+                // Service order and flight plan of pivot
+                $service_order = $equipment->service_order_flight_plan->service_order;
+                $flight_plan = $equipment->service_order_flight_plan->flight_plan;
+            }
         }
 
         $this->formatedData["total_records"] = $this->data->total();

@@ -18,33 +18,39 @@ class FlightPlanRepository implements RepositoryInterface
     }
 
     function getPaginate(string $limit, string $page, string $search)
-    {
+    {   
         return $this->flightPlanModel
-            ->with(["service_orders"])
+            ->with(["service_orders"]) // pivot
             ->search($search) // scope
             ->paginate($limit, $columns = ['*'], $pageName = 'page', $page);
     }
 
     function createOne(Collection $data)
     {
-
+        
         // Flight plan is stored just if does not already exists
         if (Storage::disk('public')->exists($data->get("path"))) {
             return response(["message" => "O plano de voo já existe!"], 500);
         }
-
+        
         $flight_plan = $this->flightPlanModel->create([
             "creator_id" => Auth::user()->id,
             "name" => $data->get("name"),
-            "file" => $data->get("routes")["filename"],
             "coordinates" => $data->get("coordinates"),
             "state" => $data->get("state"),
             "city" => $data->get("city"),
             "description" => $data->get("description")
         ]);
 
+        // File save
+        $flight_plan->file()->create([
+            "name" => $data->get("routes")["filename"],
+            "path" => $data->get("routes")["path"]
+        ]);
+
         $image_path = "images/flight_plans/" . $data->get("image_filename");
 
+        // Image save
         $flight_plan->image()->create([
             "path" => $image_path
         ]);

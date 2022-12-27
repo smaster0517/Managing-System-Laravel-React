@@ -6,7 +6,6 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Users\User;
 use App\Models\Accesses\AnnualTraffic;
-use App\Models\Accesses\AccessedDevice;
 
 class AdminSeeder extends Seeder
 {
@@ -39,14 +38,6 @@ class AdminSeeder extends Seeder
             "october" => 0,
             "november" => 0,
             "december" => 0
-        ]);
-
-        AccessedDevice::create([
-            "user_id" => $user->id,
-            "personal_computer" => 0,
-            "smartphone" => 1,
-            "tablet" => 0,
-            "other" => 0
         ]);
     }
 }

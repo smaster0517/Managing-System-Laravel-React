@@ -25,7 +25,7 @@ export const FlightPlanInformation = React.memo((props) => {
     return (
         <>
             <Tooltip title="Info">
-                <IconButton disabled={!AuthData.data.user_powers["2"].profile_powers.write == 1} onClick={handleClickOpen}>
+                <IconButton disabled={!AuthData.data.user_powers["2"].profile_powers.write === 1} onClick={handleClickOpen}>
                     <FontAwesomeIcon icon={faCircleInfo} color={AuthData.data.user_powers["2"].profile_powers.write == 1 ? "#007937" : "#E0E0E0"} size="sm" />
                 </IconButton>
             </Tooltip>
@@ -126,7 +126,7 @@ export const FlightPlanInformation = React.memo((props) => {
                         <Grid item xs={12} sm={2}>
                             <TextField
                                 margin="dense"
-                                defaultValue={props.record.total_logs}
+                                defaultValue={props.record.logs.total}
                                 label="Logs"
                                 fullWidth
                                 variant="outlined"
@@ -139,7 +139,7 @@ export const FlightPlanInformation = React.memo((props) => {
                         <Grid item xs={12} sm={2}>
                             <TextField
                                 margin="dense"
-                                defaultValue={props.record.total_incidents}
+                                defaultValue={props.record.incidents.total}
                                 label="Incidentes"
                                 fullWidth
                                 variant="outlined"
@@ -150,7 +150,7 @@ export const FlightPlanInformation = React.memo((props) => {
                         </Grid>
                     </Grid>
 
-                    <Typography component={'p'} mb={1}>Ordens de serviço vinculadas: {props.record.service_orders.data.length} (Ativas: {props.record.service_orders.active} | Inativas: {props.record.service_orders.inactive})</Typography>
+                    <Typography component={'p'} mb={1}>Ordens de serviço vinculadas: {props.record.service_orders.length}</Typography>
 
                     {props.record.service_orders.length > 0 &&
                         <Grid item xs={12} md={6}>

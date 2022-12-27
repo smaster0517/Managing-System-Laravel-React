@@ -5,8 +5,9 @@ namespace App\Models\Logs;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-// Models
+// Model
 use App\Models\Pivot\ServiceOrderFlightPlan;
+use App\Models\Files\File;
 
 class Log extends Model
 {
@@ -40,6 +41,14 @@ class Log extends Model
                 $query->where($filter["column"], $filter["value"]);
             }
         });
+    }
+
+    /*
+    * Polymorphic relationship with table "files"
+    */
+    function file()
+    {
+        return $this->morphOne(File::class, 'fileable');
     }
 
     /*

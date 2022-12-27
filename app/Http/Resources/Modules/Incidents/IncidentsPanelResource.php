@@ -47,26 +47,38 @@ class IncidentsPanelResource extends JsonResource
                 "created_at" => strtotime($service_order->created_at)
             ];
 
-            // Get related flight plan // Table "service_order_flight_plan"
-            $flight_plan = $incident->service_order_flight_plan->flight_plan;
+            // Related flight plan that exists in service order
+            // A incident occurs in a flight plan that exists in a service order
+            if (!is_null($incident->service_order_flight_plan)) {
 
-            $this->formatedData["records"][$row]["service_order"]["flight_plan"] = [
-                "id" => $flight_plan->id,
-                "creator" => [
-                    "name" => $flight_plan->user->name,
-                    "email" => $flight_plan->user->email,
-                    "deleted_at" => $flight_plan->user->deleted_at
-                ],
-                "name" => $flight_plan->name,
-                "logs" => $flight_plan->logs,
-                "incidents" => [], //$flight_plan->pivot->incident_id
-                "file" => $flight_plan->file,
-                "localization" => [
-                    "coordinates" => $flight_plan->coordinates,
-                    "state" => $flight_plan->state,
-                    "city" => $flight_plan->city
-                ]
-            ];
+                // Service order and flight plan of pivot
+                $service_order = $incident->service_order_flight_plan->service_order;
+                $flight_plan = $incident->service_order_flight_plan->flight_plan;
+
+                $this->formatedData["records"][$row]["service_order"] = [
+                    "id" => $service_order->id,
+                    "name" => $service_order->name,
+                    "flight_plan" => [
+                        "id" => $flight_plan->id,
+                        "creator" => [
+                            "name" => $flight_plan->user->name,
+                            "email" => $flight_plan->user->email,
+                            "deleted_at" => $flight_plan->user->deleted_at
+                        ],
+                        "name" => $flight_plan->name,
+                        "logs" => $flight_plan->logs,
+                        "file" => [
+                            "name" => $flight_plan->file->name,
+                            "path" => $flight_plan->file->path
+                        ],
+                        "localization" => [
+                            "coordinates" => $flight_plan->coordinates,
+                            "state" => $flight_plan->state,
+                            "city" => $flight_plan->city
+                        ]
+                    ]
+                ];
+            }
         }
 
         $this->formatedData["total_records"] = $this->data->total();

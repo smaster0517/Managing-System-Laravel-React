@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 // Custom
 use App\Models\Images\Image;
-use App\Models\FlightPlans\FlightPlan;
+use App\Models\Pivot\ServiceOrderFlightPlan;
 
 class Equipment extends Model
 {
@@ -15,6 +15,17 @@ class Equipment extends Model
 
     protected $table = 'equipments';
     protected $guarded = [];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'created_at' => 'date:Y-m-d',
+        'updated_at' => 'date:Y-m-d',
+        'purchase_date' => 'date:Y-m-d'
+    ];
 
     /*
     * Scope for search
@@ -59,24 +70,11 @@ class Equipment extends Model
         return $this->morphOne(Image::class, 'imageable');
     }
 
+    /*
+    * Relationship with flight plan of a service order
+    */
     function service_order_flight_plan()
     {
-        return $this->belongsToMany(FlightPlan::class, "service_order_flight_plan", "equipment_id")->withPivot(["id", "drone_id", "battery_id"]);
+        return $this->belongsTo(ServiceOrderFlightPlan::class, "service_order_flight_plan_id", "id");
     }
-
-    function service_orders()
-    {
-        return $this->belongsToMany(FlightPlan::class, "service_order_flight_plan", "equipment_id")->withPivot(["id", "drone_id", "battery_id"]);
-    }
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'created_at' => 'date:Y-m-d',
-        'updated_at' => 'date:Y-m-d',
-        'purchase_date' => 'date:Y-m-d'
-    ];
 }

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Users\User;
 use App\Models\ServiceOrders\ServiceOrder;
 use App\Models\Images\Image;
+use App\Models\Files\File;
 
 class FlightPlan extends Model
 {
@@ -58,7 +59,7 @@ class FlightPlan extends Model
     */
     function service_orders()
     {
-        return $this->belongsToMany(ServiceOrder::class, "service_order_flight_plan")->withPivot(["id", "drone_id", "battery_id", "equipment_id"]);
+        return $this->belongsToMany(ServiceOrder::class, "service_order_flight_plan");
     }
 
     /*
@@ -67,6 +68,14 @@ class FlightPlan extends Model
     function image()
     {
         return $this->morphOne(Image::class, 'imageable');
+    }
+
+    /*
+    * Polymorphic relationship with table "files"
+    */
+    function file()
+    {
+        return $this->morphOne(File::class, 'fileable');
     }
 
     /**

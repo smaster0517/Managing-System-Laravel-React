@@ -19,6 +19,7 @@ class EquipmentRepository implements RepositoryInterface
     function getPaginate(string $limit, string $page, string $search)
     {
         return $this->equipmentModel->with('image')
+            ->with("service_order_flight_plan")
             ->search($search) // scope
             ->paginate(intval($limit), $columns = ['*'], $pageName = 'page', intval($page));
     }
